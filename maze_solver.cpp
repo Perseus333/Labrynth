@@ -8,100 +8,88 @@ using namespace std;
 using namespace std::chrono;
 
 // Edit these values
-const bool debugMode = false;;
+const bool debugMode = false;
 const int globalSize = 100;
-
-class Cell {
-public:
-    int x;
-    int y;
-    bool state; //true=path false=wall
-};
 
 
 class Maze {
 public:
     static const int sideLength = globalSize;
-    Cell cells[sideLength][sideLength];
-    int startPos[2];
-
-    void populateMaze() {
-        for (int y = 0; y < sideLength; ++y) {
-            for (int x = 0; x < sideLength; ++x) {
-                cells[y][x] = {x, y, false};
-            }
-        }
-    }
-
+    static const int mazeSize = sideLength * sideLength;
+    bool cells[mazeSize]; // true=path; false=wall;
+    int startPos;
 
     void printMaze() {
-        int rowNum = 0;
-        for (const auto& row : cells) {
-            for (const auto& cell : row) {
-                if (cell.state == true) {
-                    if (rowNum == sideLength - 1) {
-                        // Goal
-                        cout << "🟨";
-                    }
-                    else if (rowNum == 0) {
-                        // Start
-                        cout << "🟦";
-                    }
-                    else {
-                        cout << "⬜";
-                    }
+        for (int pos = 0; pos < mazeSize; ++pos) {
+            // Detects new line
+            if (pos % sideLength == 0) {
+                cout << "\n";
+            }
+            if (cells[pos] == true) {
+                if (pos < sideLength) {
+                    // Start
+                    cout << "🟦";
+                }
+                else if (pos > (mazeSize - sideLength)) {
+                    // Goal
+                    cout << "🟨";
                 }
                 else {
-                    cout << "⬛";
+                    cout << "⬜";
                 }
-                // cout << " "; // used to correct line height and character width differences
             }
-            cout << "\n";
-            ++rowNum;
+            else {
+                cout << "⬛";
+            }
         }
-        cout << "\n\n\n";
+        cout << endl;
     }
 
     void pickStart() {
-        int startX = (rand() % (sideLength-2))+1;
-        cells[0][startX].state = true;
+        // The starting cell at y=1
+        int start = ((rand() % (sideLength-2))+1)+sideLength;
+        // The cell at y=0
+        cells[start-sideLength] = true;
         // Two cells are picked at start because 
         // the cell at y=0 can only move to the cell below it
-        cells[1][startX].state = true;
-        startPos[0] = 1;
-        startPos[1] = startX;
-    }    
+        cells[start+sideLength] = true;
+        startPos = start;
+    }
 
     void carvePath() {
-        vector<pair<int,int>>pathList = {};
-        Cell cell = cells[startPos[0]][startPos[1]];
+        // Set all the cells as walls
+        for (int i = 0; i < mazeSize; ++i) {
+            cells[i] = false;
+        }
+        vector<int>pathList = {};
+        int cell = startPos;
 
-        int directions[4][2] = {
-                {-2, 0},   // nn (north)
-                {0, 2},    // ee (east)
-                {2, 0},    // ss (south)
-                {0, -2}    // ww (west)
+        int directions[4] = {
+            -2*sideLength + 0,   // nn (north)
+             0*sideLength + 2,   // ee (east)
+             2*sideLength + 0,   // ss (south)
+             0*sideLength - 2    // ww (west)
         };
 
         // Main loop
         while (true) {
             if (debugMode) printMaze();
             // Checks all four directions
-            vector<pair<int,int>>validNeighbors = {};
+            vector<int>validNeighbors = {};
 
-            for (const auto& direction : directions) {
-                int newY = cell.y + direction[0];
-                int newX = cell.x + direction[1];
+            for (const int direction : directions) {
+                int newPos = cell + direction;
+                int newX = newPos % sideLength;
+                int newY = newPos / sideLength;
                 // Check if it's within bounds of the maze and if it's not already a path
-                if ((newX >= 1 && newX < sideLength - 1 && newY >= 1 && newY < sideLength - 1) && !cells[newY][newX].state) {
-                    validNeighbors.push_back({newY, newX});
+                if ((newX >= 1 && newX < sideLength - 1 && newY >= 1 && newY < sideLength - 1) && !cells[newPos]) {
+                    validNeighbors.push_back(newPos);
                 }
             }
             if (validNeighbors.empty()) {
                 if (!pathList.empty()) {
                     pathList.pop_back();
-                    cell.y = pathList.back().first;
-                    cell.x = pathList.back().second;
+                    cell = pathList.back();
                 }
                 else {
                     break;
@@ -109,35 +97,36 @@ public:
             }
             else {
                 int randomIndex = rand() % validNeighbors.size();
-                auto [newY, newX] = validNeighbors[randomIndex];
-
-                cells[(cell.y + newY) / 2][(cell.x + newX) / 2].state = true;
-                cells[newY][newX].state = true;
+                int newPos = validNeighbors[randomIndex];
+                
+                int newY = newPos / sideLength;
+                int newX = newPos % sideLength;
+                int cellY = cell / sideLength;
+                int cellX = cell % sideLength;
+                
+                cells[(((cellY + newY) / 2)*sideLength) + ((cellX + newX) / 2)] = true;
+                cells[(newY*sideLength)+newX] = true;
                
-                cell.x = newX;
-                cell.y = newY;
-                pathList.push_back({newY, newX});
+                cell = newPos;
+                pathList.push_back(newPos);
             }
         }
     }
 
     void linkGoal() {
-        Cell goalConnectionPoint;
+        int goalConnectionPoint;
         bool connection = false;
-        for (int row = sideLength - 1; row >= 0; --row) {
-            for (int cellPos = 0; cellPos < sideLength; ++cellPos) {
-                if (cells[row][cellPos].state == 1) {
-                    goalConnectionPoint.y = row;
-                    goalConnectionPoint.x = cellPos;
-                    connection = true;
-                    break;
-                }
+        for (int pos = mazeSize-1; pos > 0; --pos) {
+            if (cells[pos] == true) {
+                goalConnectionPoint = pos;
+                connection = true;
+                break;
             }
             if (connection) break;
         }
 
-        for (int yCoord = goalConnectionPoint.y; yCoord < sideLength; ++yCoord) {
-            cells[yCoord][goalConnectionPoint.x].state = 1;
+        for (int linkPos = goalConnectionPoint; linkPos < mazeSize; linkPos += sideLength) {
+            cells[linkPos] = true;
         }
     }
 };
@@ -146,7 +135,6 @@ public:
 void generateMaze() {
     srand(static_cast<unsigned int>(time(0)));
     Maze maze;
-    maze.populateMaze();
     if (debugMode) maze.printMaze();
 
     maze.pickStart();
@@ -175,7 +163,6 @@ void benchmarkMaze(int repetitions) {
 
     for (int i = 0; i < repetitions; i++) {
         auto start = high_resolution_clock::now();
-        maze.populateMaze();
         maze.pickStart();
         maze.carvePath();
         maze.linkGoal();
