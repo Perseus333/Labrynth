@@ -1,8 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <random>
-#include <tuple>
-#include <functional>
 #include <ctime>
 #include <chrono>
 #include <array>
@@ -26,7 +23,7 @@ class Maze {
 public:
     static const int sideLength = globalSize;
     Cell cells[sideLength][sideLength];
-    vector<int> startPos;
+    int startPos[2];
 
     void populateMaze() {
         for (int y = 0; y < sideLength; ++y) {
@@ -71,14 +68,15 @@ public:
         // Two cells are picked at start because 
         // the cell at y=0 can only move to the cell below it
         cells[1][startX].state = true;
-        startPos = {1, startX};
+        startPos[0] = 1;
+        startPos[1] = startX;
     }    
 
     void carvePath() {
-        vector<pair<int, int>> pathList = {};
+        vector<pair<int,int>>pathList = {};
         Cell cell = cells[startPos[0]][startPos[1]];
 
-        vector<pair<int, int>> directions = {
+        int directions[4][2] = {
                 {-2, 0},   // nn (north)
                 {0, 2},    // ee (east)
                 {2, 0},    // ss (south)
@@ -89,11 +87,11 @@ public:
         while (true) {
             if (debugMode) printMaze();
             // Checks all four directions
-            vector<pair<int,int>> validNeighbors = {};
+            vector<pair<int,int>>validNeighbors = {};
 
             for (const auto& direction : directions) {
-                int newY = cell.y + direction.first;
-                int newX = cell.x + direction.second;
+                int newY = cell.y + direction[0];
+                int newX = cell.x + direction[1];
                 // Check if it's within bounds of the maze and if it's not already a path
                 if ((newX >= 1 && newX < sideLength - 1 && newY >= 1 && newY < sideLength - 1) && !cells[newY][newX].state) {
                     validNeighbors.push_back({newY, newX});
@@ -127,7 +125,7 @@ public:
         Cell goalConnectionPoint;
         bool connection = false;
         for (int row = sideLength - 1; row >= 0; --row) {
-            for (int cellPos = 0; cellPos <= sideLength; ++cellPos) {
+            for (int cellPos = 0; cellPos < sideLength; ++cellPos) {
                 if (cells[row][cellPos].state == 1) {
                     goalConnectionPoint.y = row;
                     goalConnectionPoint.x = cellPos;
