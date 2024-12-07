@@ -4,15 +4,9 @@
 - [x] time the mazecompletion
 - [x] convert vectors to arrays
 - [x] Optimize pathlist
-- [ ] Try to find a way to optimize with arrays
+- [x] Try to find a way to optimize with arrays
 - [x] Search for even more optimizations
   - [x] Fix decision process
-
-workingwithvectors = 225ms
-withArraysHalfDone = 430ms
-pathListOptimization = 45ms
-pathListOptimization(2024-12) = 9ms
-
-chatGPT(2024-12) = 13μs
-
-10357 ---- 1357  blocks / cos (70) = 1444 blocks
+- [x] Optimize with single dimensional array
+- [ ] Organize the filesystem
+- [ ] Add support for comparison between versions

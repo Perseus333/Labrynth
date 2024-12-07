@@ -10,7 +10,7 @@ using namespace std;
 using namespace std::chrono;
 
 // Edit this values
-const int globalSize = 40;
+const int globalSize = 100;
 const bool strictLines = true;
 const bool debugMode = false;
 // From 1-100%
