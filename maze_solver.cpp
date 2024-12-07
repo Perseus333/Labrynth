@@ -11,7 +11,6 @@ using namespace std;
 using namespace std::chrono;
 
 // Edit these values
-const int globalSize = 101;
 const bool debugMode = false;
 
 class Cell {
@@ -59,7 +58,7 @@ public:
                 else {
                     cout << "⬛";
                 }
-                // cout << " ";
+                // cout << " "; // used to correct line height and character width differences
             }
             cout << "\n";
             ++rowNum;
@@ -89,9 +88,7 @@ public:
 
         // Main loop
         while (true) {
-            if (debugMode) {
-                printMaze();
-            }
+            if (debugMode) printMaze();
             // Checks all four directions
             vector<pair<int,int>> validNeighbors = {};
 
@@ -130,18 +127,17 @@ public:
 
     void linkGoal() {
         Cell goalConnectionPoint;
-        goalConnectionPoint.x = 999;
+        bool connection = false;
         for (int row = sideLength - 1; row >= 0; --row) {
             for (int cellPos = 0; cellPos <= sideLength; ++cellPos) {
                 if (cells[row][cellPos].state == 1) {
                     goalConnectionPoint.y = row;
                     goalConnectionPoint.x = cellPos;
+                    connection = true;
                     break;
                 }
             }
-            if (goalConnectionPoint.x != 999) {
-                break;
-            }
+            if (connection) break;
         }
 
         for (int yCoord = goalConnectionPoint.y; yCoord < sideLength; ++yCoord) {
@@ -152,32 +148,75 @@ public:
 
 
 void generateMaze(int sideLength) {
-    // Start measuring time
-
+    srand(static_cast<unsigned int>(time(0)));
     Maze maze;
     maze.sideLength = sideLength;
-    auto start = high_resolution_clock::now();
     maze.populateMaze();
-    if (debugMode) {
-        maze.printMaze();
-    }
+    if (debugMode) maze.printMaze();
+
     maze.pickStart();
     maze.carvePath();
     maze.linkGoal();
-    auto stop = high_resolution_clock::now();
-
-
-    // Not calculate the printing time
     maze.printMaze();
+}
 
-    // Calculate the duration
-    auto duration = duration_cast<microseconds>(stop - start);
+void displayProgressBar(int currentStep, int totalSteps) {
+    int barWidth = 20; // Fixed width for the progress bar
+    int progress = (currentStep * barWidth) / totalSteps;
+    cout << "\r["; // Return cursor to the start of the line
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < progress) {
+            cout << "#"; // Filled portion
+        } else {
+            cout << "="; // Empty portion
+        }
+    }
+    cout << "] (" << currentStep << "/" << totalSteps << ")..." << flush;
+}
 
-    // Print the duration in milliseconds
-    cout << "Time taken to generate the maze: " << duration.count() << " μs" << endl;
+void benchmarkMaze(int sideLength, int repetitions) {
+    Maze maze;
+    maze.sideLength = sideLength;
+    long long totalTime = 0;
+
+    for (int i = 0; i < repetitions; i++) {
+        auto start = high_resolution_clock::now();
+        maze.populateMaze();
+        maze.pickStart();
+        maze.carvePath();
+        maze.linkGoal();
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start);
+        totalTime += duration.count();
+
+        displayProgressBar(i + 1, repetitions);
+    }
+
+    // Print the average time
+    int averageTime = totalTime / repetitions;
+    cout << "\nAverage time taken to generate the maze: " << averageTime << " μs" << endl;
 }
 
 int main() {
-    srand(static_cast<unsigned int>(time(0)));
-    generateMaze(globalSize);
+    int globalSize;
+    cout << "Select the side length of the maze(square): ";
+    cin >> globalSize;
+
+    bool benchmarkMode = false;
+    cout << "Benchmark? (y/n)?";
+    char input;
+    cin >> input;
+    if (input == 'y') {
+        benchmarkMode = true;
+    }
+
+    if (benchmarkMode) {
+        int repetitions;
+        cout << "Select the amount of repetitions: ";
+        cin >> repetitions;
+        benchmarkMaze(globalSize, repetitions);
+    }
+    else {
+        generateMaze(globalSize);
+    }
 }
