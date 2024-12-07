@@ -5,8 +5,8 @@
 - [x] convert vectors to arrays
 - [x] Optimize pathlist
 - [ ] Try to find a way to optimize with arrays
-- [ ] Search for even more optimizations
-  - [ ] Fix decision process
+- [x] Search for even more optimizations
+  - [x] Fix decision process
 
 workingwithvectors = 225ms
 withArraysHalfDone = 430ms

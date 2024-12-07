@@ -6,7 +6,7 @@
 using namespace std;
 using namespace std::chrono;
 
-const int SIZE = 20;
+const int SIZE = 100;
 const int SIZE_SQR = SIZE * SIZE;
 
 array<int, SIZE_SQR> cells;

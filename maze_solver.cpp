@@ -11,7 +11,8 @@ using namespace std;
 using namespace std::chrono;
 
 // Edit these values
-const bool debugMode = false;
+const bool debugMode = false;;
+const int globalSize = 100;
 
 class Cell {
 public:
@@ -23,13 +24,11 @@ public:
 
 class Maze {
 public:
-    int sideLength;
-    vector<vector<Cell>> cells;
+    static const int sideLength = globalSize;
+    Cell cells[sideLength][sideLength];
     vector<int> startPos;
 
-
     void populateMaze() {
-        cells.resize(sideLength, vector<Cell>(sideLength)); 
         for (int y = 0; y < sideLength; ++y) {
             for (int x = 0; x < sideLength; ++x) {
                 cells[y][x] = {x, y, false};
@@ -100,8 +99,17 @@ public:
                     validNeighbors.push_back({newY, newX});
                 }
             }
-            
-            if (!validNeighbors.empty()) {
+            if (validNeighbors.empty()) {
+                if (!pathList.empty()) {
+                    pathList.pop_back();
+                    cell.y = pathList.back().first;
+                    cell.x = pathList.back().second;
+                }
+                else {
+                    break;
+                }
+            }
+            else {
                 int randomIndex = rand() % validNeighbors.size();
                 auto [newY, newX] = validNeighbors[randomIndex];
 
@@ -111,16 +119,6 @@ public:
                 cell.x = newX;
                 cell.y = newY;
                 pathList.push_back({newY, newX});
-            }
-            else {
-                if (!pathList.empty()) {
-                    pathList.pop_back();
-                    cell.y = pathList.back().first;
-                    cell.x = pathList.back().second;
-                }
-                else {
-                    break;
-                }
             }
         }
     }
@@ -147,10 +145,9 @@ public:
 };
 
 
-void generateMaze(int sideLength) {
+void generateMaze() {
     srand(static_cast<unsigned int>(time(0)));
     Maze maze;
-    maze.sideLength = sideLength;
     maze.populateMaze();
     if (debugMode) maze.printMaze();
 
@@ -174,9 +171,8 @@ void displayProgressBar(int currentStep, int totalSteps) {
     cout << "] (" << currentStep << "/" << totalSteps << ")..." << flush;
 }
 
-void benchmarkMaze(int sideLength, int repetitions) {
+void benchmarkMaze(int repetitions) {
     Maze maze;
-    maze.sideLength = sideLength;
     long long totalTime = 0;
 
     for (int i = 0; i < repetitions; i++) {
@@ -198,10 +194,6 @@ void benchmarkMaze(int sideLength, int repetitions) {
 }
 
 int main() {
-    int globalSize;
-    cout << "Select the side length of the maze(square): ";
-    cin >> globalSize;
-
     bool benchmarkMode = false;
     cout << "Benchmark? (y/n)?";
     char input;
@@ -214,9 +206,9 @@ int main() {
         int repetitions;
         cout << "Select the amount of repetitions: ";
         cin >> repetitions;
-        benchmarkMaze(globalSize, repetitions);
+        benchmarkMaze(repetitions);
     }
     else {
-        generateMaze(globalSize);
+        generateMaze();
     }
 }
