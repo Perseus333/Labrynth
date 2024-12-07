@@ -11,6 +11,7 @@
 workingwithvectors = 225ms
 withArraysHalfDone = 430ms
 pathListOptimization = 45ms
-chatGPT = 0.33ms
+pathListOptimization(2024-12) = 9ms
+chatGPT(2024-12) = 13μs
 
 10357 ---- 1357  blocks / cos (70) = 1444 blocks

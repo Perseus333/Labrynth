@@ -6,7 +6,7 @@
 using namespace std;
 using namespace std::chrono;
 
-const int SIZE = 40;
+const int SIZE = 20;
 const int SIZE_SQR = SIZE * SIZE;
 
 array<int, SIZE_SQR> cells;
@@ -59,8 +59,8 @@ void printMaze() {
 int main() {
     srand(static_cast<unsigned int>(time(0)));
 
-    auto start = high_resolution_clock::now();
 
+    auto start = high_resolution_clock::now();
     generateMaze();
     auto end = high_resolution_clock::now();
     printMaze();
